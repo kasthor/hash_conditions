@@ -16,10 +16,10 @@ module HashConditions
 
     def self.match hash, conditions
       iterator conditions, 
-        result: ->( expression, options ){
+        result: lambda{ | expression, options |
           match_single hash, expression
         },
-        finalize: ->( array, options ){
+        finalize: lambda{ | array, options |
           finalize hash, array, options 
         }
     end

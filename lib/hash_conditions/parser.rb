@@ -19,10 +19,10 @@ module HashConditions
 
     def self.get_conditions conditions, options = {}
       result = iterator conditions,
-        result: ->( expression, options ){
+        result: lambda{ | expression, options |
           _parse_key_value_condition expression
         },
-        finalize: -> ( array, options ){
+        finalize: lambda{ | array, options |
           "( #{ array.join( " #{ options[:glue].upcase } " ) } )"
         }
 
