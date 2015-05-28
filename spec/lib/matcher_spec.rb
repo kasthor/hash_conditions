@@ -100,6 +100,16 @@ describe "match" do
     it { scenarios.each &match }
   end
 
+  describe "$eval" do
+    let( :hash ){{condition: 5, other_condition: 10, null: nil, time: Time.now}}
+    let( :scenarios ){[
+      [{ '$eval' => [ :condition, '$eq', 5] }, true],
+      [{ '$eval' => [ {'$add' => [ :condition, :other_condition ] }, '$eq', 15 ] }, true],
+      [{ '$eval' => [ {'$substract' => [ '$now', :time ] }, '$lt', 1 ] }, true]
+    ]}
+
+    it { scenarios.each &match }
+  end
 
   describe "force string comparations" do
     it "makes a string match a number for equality" do
@@ -107,6 +117,29 @@ describe "match" do
 
       expect( HashConditions::Matcher.match( { a: "5" }, { a: 5 } ) ).to be true
       expect( HashConditions::Matcher.match( { a: "5" }, { a: { '$eq' => 5 } } ) ).to be true
+    end
+  end
+
+  describe "get_key" do
+    let( :hash ){{ a: 1, b: 2, null: nil } }
+    it "returns a key when key is a string" do
+      expect( HashConditions::Matcher.get_key hash, :a ).to eq 1
+    end
+
+    it "return a time containing current time when now is specified" do
+      expect( HashConditions::Matcher.get_key hash, :$now ).to be_within( 1 ).of( Time.now )
+    end
+
+    it "executes an addition when requested" do
+      expect( HashConditions::Matcher.get_key( hash, { "$add" => [ :a, :b ] } )).to eq( 3 )
+    end
+
+    it "executes a substraction when requested" do
+      expect( HashConditions::Matcher.get_key( hash, { "$substract" => [ :b, :a ] } )).to eq( 1 )
+    end
+
+    it "executes an $ifNull expression" do
+      expect( HashConditions::Matcher.get_key( hash, {'$ifNull' => [ :null , :a ] } )).to eq( 1 )
     end
   end
 end

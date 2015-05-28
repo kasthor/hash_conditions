@@ -31,8 +31,38 @@ module HashConditions
       end
     end   
     
+    ARITMETIC_OPERATORS = {
+      '$add' => :+,
+      '$substract' => :-,
+      '$multiply' => :*,
+      '$divide' => :/,
+    }
+
+    def self.get_key hash, key
+      case key
+        when String, Symbol
+          if key.to_s == '$now'
+            Time.now
+          else
+            hash[key]
+          end
+        when Hash
+          op, values = key.to_a.first
+
+          values = values.map{ |x| get_key hash, x }
+
+          case op.to_s
+            when *ARITMETIC_OPERATORS.keys
+              values.inject( ARITMETIC_OPERATORS[ op ] )
+            when '$ifNull'
+              val = values.shift
+              val.nil? ? values.shift : val
+          end
+      end
+    end
+    
     def self.match_single hash, expression
-      hash_value = hash[ expression[:key] ]
+      hash_value = get_key hash, expression[:key]
       comparisson_value = expression[ :value ]
 
       case expression[:operator]

@@ -20,8 +20,9 @@ module HashConditions
             case key
               when '$and' then iterator(value, options.merge( glue: :and ))
               when '$or' then iterator(value, options.merge( glue: :or))
+              when '$eval' then results_from_expression( eval_expression( value ), options )
               when _ext_match( value ) then _ext_parse( key, value, options )
-              else options[:result].call( extract_expression( key, value ), options )
+              else results_from_expression( extract_expression( key, value ), options )
             end
           end
         when ::Array
@@ -31,6 +32,18 @@ module HashConditions
       end
   
       options[:finalize].call result, options
+    end
+
+    def results_from_expression expression, options
+      options[:result].call( expression, options )
+    end
+
+    def eval_expression value
+      raise "Invalid eval expression" unless value.is_a? Array and value.length == 3 
+
+      Hash[ [ :key, :operator, :value ].zip( value ) ].tap do | exp |
+        exp[ :operator ] = get_op exp[ :operator ] 
+      end
     end
 
     def extract_expression key, value
@@ -48,31 +61,34 @@ module HashConditions
           if value.length == 1
             key, value = value.to_a.first
 
-            result[:operator] = case key
-              when '$eq', '$equal' then :==
-              when '$ne', '$not_equal' then :!=
-              when '$gt' then :>
-              when '$lt' then :<
-              when '$gte' then :>=
-              when '$lte' then :<=
-              when '$between' then :between
-              when '$in' then :in
-              when '$contains' then :contains
-              else 
-                raise "No operator for '#{ op }"
-            end
-
+            result[:operator] = get_op key
             result[:value] = value
           else 
             case 
               when value.keys.include?('$between')
                 result[:operator] = :between
-                result[:values] = value.values_at [ '$between', '$and' ]
+                result[:value] = value.values_at [ '$between', '$and' ]
             end
           end
       end
 
       result
+    end
+
+    def get_op key
+      case key
+        when '$eq', '$equal' then :==
+        when '$ne', '$not_equal' then :!=
+        when '$gt' then :>
+        when '$lt' then :<
+        when '$gte' then :>=
+        when '$lte' then :<=
+        when '$between' then :between
+        when '$in' then :in
+        when '$contains' then :contains
+        else 
+          raise "No operator for '#{ op }"
+      end
     end
 
     def _ext_match condition
