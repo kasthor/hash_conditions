@@ -57,56 +57,70 @@ end
 describe "external handlers" do
   before { HashConditions::Parser.reset }
   it "reset the matchers" do
-    HashConditions::Parser.match "x", "x"
+    HashConditions::Parser.module_match "x", "x"
     HashConditions::Parser.reset
-    expect( HashConditions::Parser.matchers.length ).to eq 0
+    expect( HashConditions::Parser.modules.length ).to eq 0
   end
   it "add a matcher" do
-    HashConditions::Parser.match "special", "special"
-    expect( HashConditions::Parser.matchers.length ).to eq 1
+    HashConditions::Parser.module_match "special", "special"
+    expect( HashConditions::Parser.modules.length ).to eq 1
   end
-  describe "matchers" do
+  describe "modules" do
     let(:fake_parser) { lambda{} }
     it "match a string" do
       expect(fake_parser).to receive(:call)
-      HashConditions::Parser.match "special", fake_parser
+      HashConditions::Parser.module_match "special", fake_parser
       HashConditions::Parser.get_conditions( { special: "test" } )
     end
+
+    it "match a specific operation" do
+      fake_parser = lambda{}
+      fake_matcher = lambda{}
+
+      expect( fake_parser ).to receive(:call)
+      expect( fake_matcher).not_to receive(:call)
+
+      HashConditions::Parser.module_match "special", fake_parser, [:parse]
+      HashConditions::Parser.module_match "special", fake_matcher, [:match]
+
+      HashConditions::Parser.get_conditions( { special: "test" } )
+    end
+
     it "match a regex" do
       expect(fake_parser).to receive(:call)
-      HashConditions::Parser.match /^special/, fake_parser
+      HashConditions::Parser.module_match /^special/, fake_parser
       HashConditions::Parser.get_conditions( { special: "test" } )
     end
     it "match a proc" do
       expect(fake_parser).to receive(:call)
       is_special = ->(key, condition){ key == :special  }
-      HashConditions::Parser.match is_special, fake_parser
+      HashConditions::Parser.module_match is_special, fake_parser
       HashConditions::Parser.get_conditions( { special: "test" } )
     end
   end
   describe "parser" do
     it "receives a string" do
-      HashConditions::Parser.match :condition, "new_condition"
+      HashConditions::Parser.module_match :condition, "new_condition"
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "new_condition = 1" 
     end
     it "receives a proc" do
       parser = ->( key, condition ){{ new_condition: 1 }}
-      HashConditions::Parser.match :condition, parser 
+      HashConditions::Parser.module_match :condition, parser 
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "( new_condition = 1 )" 
     end
     it "receives a block" do
-      HashConditions::Parser.match(:condition){ |key, condition| { new_condition: 1 } }
+      HashConditions::Parser.module_match(:condition){ |key, condition| { new_condition: 1 } }
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "( new_condition = 1 )" 
     end
   end
   describe "parser application" do
     it "when receiving is a string, replace key" do
-      HashConditions::Parser.match :condition, "new_condition"
+      HashConditions::Parser.module_match :condition, "new_condition"
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "new_condition = 1" 
     end
 
     it "when receiving a proc and returns a string, raises an exception" do
-      HashConditions::Parser.match :condition do 
+      HashConditions::Parser.module_match :condition do 
         "new_condition = 0"
       end
       expect {
@@ -114,16 +128,16 @@ describe "external handlers" do
       }.to raise_error
     end
     it "when receiving a proc and return a hash, it gets assambled" do
-      HashConditions::Parser.match :condition do 
+      HashConditions::Parser.module_match :condition do 
         { new_condition: 0 }
       end
-      HashConditions::Parser.get_conditions({ condition: 1 }).should == "( new_condition = 0 )" 
+      expect( HashConditions::Parser.get_conditions({ condition: 1 }) ).to eq( "( new_condition = 0 )" )
     end
   end
   describe "module flags" do
     it "adds and check existence of a module" do
-      HashConditions::Parser.add_module "TEST"
-      expect( HashConditions::Parser.contains_module("TEST") ).to eq( true )
+      HashConditions::Parser.add_bundle "TEST"
+      expect( HashConditions::Parser.contains_bundle("TEST") ).to eq( true )
     end
   end
 end

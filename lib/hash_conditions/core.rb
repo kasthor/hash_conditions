@@ -1,12 +1,28 @@
 module HashConditions
   module Core
     # Modular Matchers
-    def matchers
-      @@matchers ||= []
+    def modules
+      @@modules ||= []
     end
 
     def reset
-      @@matchers = []
+      @@modules = []
+    end
+
+    def bundles 
+      @@bundles ||= []
+    end
+
+    def add_bundle name
+      bundles << name
+    end
+    def contains_bundle name 
+      bundles.include? name
+    end
+
+    def module_match matcher, writer = nil, operations = [], &block
+      writer = block if block
+      modules << ModuleMatcher.new(matcher, writer, operations)
     end
   
     # Iterator
@@ -21,7 +37,7 @@ module HashConditions
               when '$and' then iterator(value, options.merge( glue: :and ))
               when '$or' then iterator(value, options.merge( glue: :or))
               when '$eval' then results_from_expression( eval_expression( value ), options )
-              when _ext_match( value ) then _ext_parse( key, value, options )
+              when _ext_match( value, options ) then _ext_parse( key, value, options )
               else results_from_expression( extract_expression( key, value ), options )
             end
           end
@@ -91,12 +107,13 @@ module HashConditions
       end
     end
 
-    def _ext_match condition
-      ->(key) { _ext_get_module( key, condition ) != nil }
+    def _ext_match condition, options
+      ->(key) { _ext_get_module( key, condition, options ) != nil }
     end
 
     def _ext_parse key, condition, options
-      matcher, parser = _ext_get_module key,condition
+      mod = _ext_get_module key,condition, options
+      parser = mod.replacement
 
       case parser 
         when String then options[:result].call(extract_expression( parser, condition ), options)
@@ -104,16 +121,9 @@ module HashConditions
       end 
     end
 
-    def _ext_get_module key, condition
-      matchers.find do | matcher_pair |
-        matcher, parser = matcher_pair
-        case matcher
-          when Symbol then matcher == key.to_sym
-          when String then matcher == key.to_s
-          when Regexp then matcher =~ key.to_s
-          when Proc   then !! matcher.call( key, condition )
-          else false
-        end
+    def _ext_get_module key, condition, options
+      modules.select{ |m| m.for_operation? options[:operation] }.find do | matcher |
+        matcher.apply_for key, condition
       end 
     end
 

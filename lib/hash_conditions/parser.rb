@@ -2,23 +2,9 @@ module HashConditions
   class Parser
     extend Core
 
-    def self.modules 
-      @@modules ||= []
-    end
-    def self.add_module name
-      modules << name
-    end
-    def self.contains_module name 
-      modules.include? name
-    end
-
-    def self.match matcher, writer = nil, &block
-      writer = block if block
-      matchers << [matcher, writer];
-    end
-
     def self.get_conditions conditions, options = {}
       result = iterator conditions,
+        operation: :parse,
         result: lambda{ | expression, options |
           _parse_key_value_condition expression
         },

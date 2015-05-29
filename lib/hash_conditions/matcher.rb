@@ -16,6 +16,7 @@ module HashConditions
 
     def self.match hash, conditions
       iterator conditions, 
+        operation: :match,
         result: lambda{ | expression, options |
           match_single hash, expression
         },
