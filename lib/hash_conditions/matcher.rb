@@ -40,6 +40,9 @@ module HashConditions
     }
 
     def self.get_key hash, key
+      __get_values = lambda do | values |
+        values.map{ |x| get_key hash, x }
+      end
       case key
         when String, Symbol
           if key.to_s == '$now'
@@ -50,14 +53,16 @@ module HashConditions
         when Hash
           op, values = key.to_a.first
 
-          values = values.map{ |x| get_key hash, x }
-
           case op.to_s
             when *ARITMETIC_OPERATORS.keys
-              values.inject( ARITMETIC_OPERATORS[ op ] )
+              __get_values.call( values ).inject( ARITMETIC_OPERATORS[ op ] )
             when '$ifNull'
-              val = values.shift
-              val.nil? ? values.shift : val
+              __get_values.call( values ).drop_while{ |n| n.nil? }.shift
+            when '$concat'
+              __get_values.call( values ).join('')
+            when '$concatWithSeparator'
+              separator = values.shift
+              __get_values.call( values ).join( separator )
           end
       end
     end
