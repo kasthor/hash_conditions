@@ -37,7 +37,7 @@ module HashConditions
               when '$and' then iterator(value, options.merge( glue: :and ))
               when '$or' then iterator(value, options.merge( glue: :or))
               when '$eval' then results_from_expression( eval_expression( value ), options )
-              when _ext_match( value, options ) then _ext_parse( key, value, options )
+              when _ext_match( value, options ) then _ext_parse( extract_expression(key, value) , options )
               else results_from_expression( extract_expression( key, value ), options )
             end
           end
@@ -88,7 +88,15 @@ module HashConditions
           end
       end
 
-      re_type result
+      result[:value] = re_type result[:value]
+
+      result
+    end
+
+    def get_condition_from_expression expression
+      {}.tap do | condition |
+        condition[ expression[:operator] ] = expression[:value]
+      end
     end
 
     def get_op key
@@ -102,30 +110,31 @@ module HashConditions
         when '$between' then :between
         when '$in' then :in
         when '$contains' then :contains
-        else 
-          raise "No operator for '#{ op }"
+        else key
       end
     end
 
     def re_type data
-      if data[:value].is_a? String
-        data[:value] = case data[:value]
-          when /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/ then DateTime.parse( data[:value] )
-          else data[:value]
+      if data.is_a? String
+        case data
+          when /\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/ then DateTime.parse( data ).to_time
+          else data
         end  
+      else
+        data
       end
-
-      data
     end
 
     def _ext_match condition, options
       ->(key) { _ext_get_module( key, condition, options ) != nil }
     end
 
-    def _ext_parse key, condition, options
+    def _ext_parse expression, options
+      key, op, value = expression.values_at :key, :operator, :value
+      condition = get_condition_from_expression expression
+
       mod = _ext_get_module key,condition, options
       parser = mod.replacement
-      op, value = condition.to_a.first
 
       case parser 
         when String then options[:result].call(extract_expression( parser, condition ), options)

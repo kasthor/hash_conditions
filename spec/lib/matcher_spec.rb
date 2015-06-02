@@ -55,7 +55,7 @@ describe "match" do
     let( :scenarios ){ [ 
       [{ condition: [ 1,2,3 ] }, true],
       [{ condition: [ 4,5,6 ] }, false],
-      [{ condition: { '$in' => [ 1,2,3 ] } }, true],
+      [{ condition: { '$in' => [ 1,2,3 ] } }, true]
     ]}
     it { scenarios.each &match }
   end
@@ -123,8 +123,8 @@ describe "match" do
   describe "re_type" do
     it "returns the value as a date if it matches the regex" do
       expect( 
-        HashConditions::Matcher.re_type({ value: "2015-05-21T18:03:39.000Z" })[:value]
-      ).to be_a DateTime
+        HashConditions::Matcher.re_type("2015-05-21T18:03:39.000Z")
+      ).to be_a Time
     end
   end
 
@@ -135,7 +135,7 @@ describe "match" do
     end
 
     it "return a time containing current time when now is specified" do
-      expect( HashConditions::Matcher.get_key hash, :$now ).to be_within( 1 ).of( Time.now )
+      expect( HashConditions::Matcher.get_key(hash, '$now') ).to be_within( 1 ).of( Time.now )
     end
 
     it "executes an addition when requested" do

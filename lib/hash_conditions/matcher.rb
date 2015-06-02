@@ -48,7 +48,7 @@ module HashConditions
           if key.to_s == '$now'
             Time.now
           else
-            hash[key]
+            re_type hash[key]
           end
         when Hash
           op, values = key.to_a.first
