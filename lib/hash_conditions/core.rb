@@ -88,7 +88,7 @@ module HashConditions
           end
       end
 
-      result
+      re_type result
     end
 
     def get_op key
@@ -105,6 +105,17 @@ module HashConditions
         else 
           raise "No operator for '#{ op }"
       end
+    end
+
+    def re_type data
+      if data[:value].is_a? String
+        data[:value] = case data[:value]
+          when /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/ then DateTime.parse( data[:value] )
+          else data[:value]
+        end  
+      end
+
+      data
     end
 
     def _ext_match condition, options

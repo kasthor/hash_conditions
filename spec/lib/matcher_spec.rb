@@ -120,6 +120,14 @@ describe "match" do
     end
   end
 
+  describe "re_type" do
+    it "returns the value as a date if it matches the regex" do
+      expect( 
+        HashConditions::Matcher.re_type({ value: "2015-05-21T18:03:39.000Z" })[:value]
+      ).to be_a DateTime
+    end
+  end
+
   describe "get_key" do
     let( :hash ){{ a: 1, b: 2, null: nil } }
     it "returns a key when key is a string" do
