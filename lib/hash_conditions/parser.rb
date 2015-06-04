@@ -3,7 +3,7 @@ module HashConditions
     extend Core
 
     def self.get_conditions conditions, options = {}
-      result = iterator conditions,
+      options = options.merge \
         operation: :parse,
         result: lambda{ | expression, options |
           _parse_key_value_condition expression
@@ -11,6 +11,8 @@ module HashConditions
         finalize: lambda{ | array, options |
           "( #{ array.join( " #{ options[:glue].upcase } " ) } )"
         }
+
+      result = iterator conditions, options
 
       result.
         gsub!(/^\( /, '').
@@ -40,7 +42,7 @@ module HashConditions
     def self._parse_value value, prepend = '', append = ''
       case value
         when String then "'#{prepend}#{value}#{append}'"
-        when DateTime, Date, Time then "'#{value.strftime("%Y-%m-%d %I:%M%p")}'"
+        when DateTime, Date, Time then "'#{value.strftime("%Y-%m-%d %H:%M")}'"
         when Integer, Float then "#{value}"
       end
     end

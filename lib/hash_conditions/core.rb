@@ -146,7 +146,7 @@ module HashConditions
       case parser 
         when String then options[:result].call(extract_expression( parser, condition ), options)
         when Hash   then _ext_read_module( { '$eval' => [ parser, op, value ] }, options )
-        when Proc   then _ext_read_module( parser.call( key, condition ), options )
+        when Proc   then _ext_read_module( parser.call( key, condition, options ), options )
       end 
     end
 

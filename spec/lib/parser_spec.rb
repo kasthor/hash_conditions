@@ -104,7 +104,7 @@ describe "external handlers" do
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "new_condition = 1" 
     end
     it "receives a proc" do
-      parser = ->( key, condition ){{ new_condition: 1 }}
+      parser = ->( key, condition, options ){{ new_condition: 1 }}
       HashConditions::Parser.module_match :condition, parser 
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "( new_condition = 1 )" 
     end
