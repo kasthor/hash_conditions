@@ -95,23 +95,30 @@ module HashConditions
 
     def get_condition_from_expression expression
       {}.tap do | condition |
-        condition[ expression[:operator] ] = expression[:value]
+        condition[ rev_op( expression[:operator] ) ] = expression[:value]
       end
     end
 
+    def ops
+      {
+        :==       => [ '$eq', '$equal' ],
+        :!=       => [ '$ne' ],
+        :>        => [ '$gt' ],
+        :<        => [ '$lt' ],
+        :>=       => [ '$gte' ],
+        :<=       => [ '$lte' ],
+        :between  => [ '$between' ],
+        :in       => [ "$in" ],
+        :contains => [ "$contains" ]
+      }
+    end
+
+    def rev_op key
+      ops[ key ] && ops[ key ].first or key
+    end
     def get_op key
-      case key
-        when '$eq', '$equal' then :==
-        when '$ne', '$not_equal' then :!=
-        when '$gt' then :>
-        when '$lt' then :<
-        when '$gte' then :>=
-        when '$lte' then :<=
-        when '$between' then :between
-        when '$in' then :in
-        when '$contains' then :contains
-        else key
-      end
+      pair = ops.find{ |k, v| Array(v).include? key }
+      pair && pair.first or key
     end
 
     def re_type data
