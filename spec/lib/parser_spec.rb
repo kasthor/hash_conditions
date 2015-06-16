@@ -119,13 +119,11 @@ describe "external handlers" do
       HashConditions::Parser.get_conditions({ condition: 1 }).should == "new_condition = 1" 
     end
 
-    it "when receiving a proc and returns a string, raises an exception" do
-      HashConditions::Parser.module_match :condition do 
+    it "when receiving a proc and returns a string, it matches" do
+      HashConditions::Parser.module_match :condition do
         "new_condition = 0"
       end
-      expect {
-        HashConditions::Parser.get_conditions({ condition: 1 }).should == "new_condition = 0" 
-      }.to raise_error
+      expect( HashConditions::Parser.get_conditions({ condition: 1 }) ).to eq("new_condition = 0")
     end
     it "when receiving a proc and return a hash, it gets assambled" do
       HashConditions::Parser.module_match :condition do 
