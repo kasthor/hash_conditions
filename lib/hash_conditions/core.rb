@@ -160,6 +160,7 @@ module HashConditions
       case parser_output
         when Hash   then iterator(parser_output, options)
         when NilClass then nil
+        when String then parser_output # this should be removed, since the matcher will not support it
         else raise "return data of type #{ parser_output.class } not supported"
       end
     end
