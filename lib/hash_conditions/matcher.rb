@@ -1,8 +1,8 @@
 module HashConditions
   class Matcher
-    extend Core 
+    extend Core
 
-    def self.configurations 
+    def self.configurations
       @@configurations ||= {}
     end
 
@@ -21,20 +21,20 @@ module HashConditions
           match_single hash, expression, options
         },
         finalize: lambda{ | array, options |
-          finalize hash, array, options 
+          finalize hash, array, options
         }
       }.merge options
 
       iterator conditions, options
     end
-   
+
     def self.finalize hash, array, options
       case options[:glue]
         when :or then array.any?
         when :and then array.all?
       end
-    end   
-    
+    end
+
     ARITMETIC_OPERATORS = {
       '$add' => :+,
       '$substract' => :-,
@@ -69,13 +69,13 @@ module HashConditions
           end
       end
     end
-    
+
     def self.match_single hash, expression, options
       hash_value = get_key hash, expression[:key], options
       comparisson_value = expression[ :value ]
 
       case expression[:operator]
-        when :== 
+        when :==
           if configuration( :force_string_comparations )
             hash_value = hash_value.to_s
             comparisson_value = comparisson_value.to_s
@@ -86,7 +86,7 @@ module HashConditions
             hash_value = hash_value.to_s
             comparisson_value = comparisson_value.map(&:to_s)
           end
-  
+
           comparisson_value.include? hash_value
         when :between
           hash_value > comparisson_value[0] and hash_value < comparisson_value[1]
@@ -99,7 +99,7 @@ module HashConditions
 
     def self.when hash, query
       now_result = match hash, query
-      test_times = critical_times( hash, time_expressions( query ) ) 
+      test_times = critical_times( hash, time_expressions( query ) )
       test_times.
        sort.
        drop_while{ |t| t < Time.now }.
@@ -108,9 +108,9 @@ module HashConditions
 
     def self.critical_times hash, expressions
       expressions.
-        map{ | e | 
+        map{ | e |
           case e[:operator]
-            when :<, :<=, :>, :>= then 
+            when :<, :<=, :>, :>= then
               diff = e[:value] - get_key(hash, e[:key]) + 1
             when :==, :!= then Time.now + s[:diff]
               diff = e[:value] - get_key(hash, e[:key])
@@ -124,8 +124,8 @@ module HashConditions
     end
 
     def self.time_expressions conditions
-      expressions = [] 
-      iterator conditions, 
+      expressions = []
+      iterator conditions,
         operation: :match,
         result: lambda{ | expression, options |
           expressions << expression if uses_now? expression

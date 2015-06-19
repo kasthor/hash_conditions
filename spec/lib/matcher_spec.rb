@@ -8,14 +8,14 @@ describe "match" do
       let( :hash ){{condition: 'value'}}
       let( :scenarios ){[
         [ { condition: 'value' }, true ],
-        [ { condition: 'false' }, false ] 
+        [ { condition: 'false' }, false ]
       ]}
       it { scenarios.each &match }
     end
-    
+
     describe "$gt" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$gt' =>  4 } }, true],
         [{ condition: { '$gt' =>  6 } }, false]
       ]}
@@ -24,7 +24,7 @@ describe "match" do
 
     describe "$lt" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$lt' =>  4 } }, false],
         [{ condition: { '$lt' =>  6 } }, true]
       ]}
@@ -33,7 +33,7 @@ describe "match" do
 
     describe "$gte" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$gte' =>  4 } }, true],
         [{ condition: { '$gte' =>  5 } }, true],
         [{ condition: { '$gte' =>  6 } }, false]
@@ -43,7 +43,7 @@ describe "match" do
 
     describe "$lte" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$lte' =>  4 } }, false],
         [{ condition: { '$lte' =>  5 } }, true],
         [{ condition: { '$lte' =>  6 } }, true]
@@ -51,9 +51,9 @@ describe "match" do
       it { scenarios.each &match }
     end
 
-    describe "$in" do 
+    describe "$in" do
       let( :hash ){{ condition: 3 }}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: [ 1,2,3 ] }, true],
         [{ condition: [ 4,5,6 ] }, false],
         [{ condition: { '$in' => [ 1,2,3 ] } }, true]
@@ -61,18 +61,18 @@ describe "match" do
       it { scenarios.each &match }
     end
 
-    describe "$between" do 
+    describe "$between" do
       let( :hash ){{ condition: 3 }}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$between' => [2, 4] } }, true],
         [{ condition: { '$between' => [4,10] } }, false],
       ]}
       it { scenarios.each &match }
     end
 
-    describe "$contains" do 
+    describe "$contains" do
       let( :hash ){{ condition: "testing" }}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ condition: { '$contains' => 'test' } }, true],
         [{ condition: { '$contains' => 'not'  } }, false],
       ]}
@@ -81,7 +81,7 @@ describe "match" do
 
     describe "$and" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ '$and' => [ { condition: { '$gt' =>  4 } }, { condition: { '$lt' =>  6 } } ] }, true],
         [{ '$and' => [ { condition: { '$gt' =>  4 } }, { condition: { '$lt' =>  4 } } ] }, false],
         [{ '$and' => [ { condition: { '$gt' =>  6 } }, { condition: { '$lt' =>  6 } } ] }, false],
@@ -92,7 +92,7 @@ describe "match" do
 
     describe "$or" do
       let( :hash ){{condition: 5}}
-      let( :scenarios ){ [ 
+      let( :scenarios ){ [
         [{ '$or' => [ { condition: { '$gt' =>  4 } }, { condition: { '$lt' =>  6 } } ] }, true],
         [{ '$or' => [ { condition: { '$gt' =>  4 } }, { condition: { '$lt' =>  4 } } ] }, true],
         [{ '$or' => [ { condition: { '$gt' =>  6 } }, { condition: { '$lt' =>  6 } } ] }, true],
@@ -123,7 +123,7 @@ describe "match" do
 
     describe "re_type" do
       it "returns the value as a date if it matches the regex" do
-        expect( 
+        expect(
           HashConditions::Matcher.re_type("2015-05-21T18:03:39.000Z")
         ).to be_a Time
       end
@@ -159,7 +159,7 @@ describe "match" do
 
 
     it "calculates the critical points out of a bunch of expressions" do
-      expect( HashConditions::Matcher.critical_times( hash, 
+      expect( HashConditions::Matcher.critical_times( hash,
        [ {:key=>{"$substract"=>["$now", :date]}, :operator=>:>, :value=>3600} ]
       ).shift).to be_within( 1 ).of( Time.now + 1800 )
     end
@@ -190,7 +190,7 @@ describe "match" do
     end
 
     it "solves a query when there are multiple time queries" do
-      query = { 
+      query = {
         "$and" => [
           { '$substract' => [ '$now', :date ] } => { '$gt' => 3600 },
           { '$substract' => [ '$now', :date ] } => { '$gt' => 7200 },
@@ -200,7 +200,7 @@ describe "match" do
     end
 
     it "returns nil when the condition will never pass" do
-      query = { 
+      query = {
         "$and" => [
           { { '$substract' => [ '$now', :date ] } => { '$gt' => 3600 } },
           { permanent_condition: {"$eq" =>  true}}

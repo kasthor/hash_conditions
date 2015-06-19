@@ -22,7 +22,7 @@ module HashConditions
     end
 
     def self._parse_key_value_condition expression
-      # "#{key} #{_parse_value_condition condition}" 
+      # "#{key} #{_parse_value_condition condition}"
       comparisson = case expression[:operator]
         when :==
           "= #{_parse_value expression[:value]}"
@@ -31,7 +31,7 @@ module HashConditions
         when :in
           "IN ( #{ expression[:value].map{ |v| _parse_value v }.join ", " } )"
         when :contains
-          "LIKE #{ _parse_value(expression[:value], '%', '%') }"  
+          "LIKE #{ _parse_value(expression[:value], '%', '%') }"
         when :between
           "BETWEEN #{ _parse_value expression[:value].shift } AND #{ _parse_value expression[:value].shift }"
       end

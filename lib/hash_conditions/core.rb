@@ -9,14 +9,14 @@ module HashConditions
       @@modules = []
     end
 
-    def bundles 
+    def bundles
       @@bundles ||= []
     end
 
     def add_bundle name
       bundles << name
     end
-    def contains_bundle name 
+    def contains_bundle name
       bundles.include? name
     end
 
@@ -24,13 +24,13 @@ module HashConditions
       writer = block if block
       modules << ModuleMatcher.new(matcher, writer, operations)
     end
-  
+
     # Iterator
 
     def iterator conditions, options = {}
       options = { glue: :and }.merge options
 
-      result = case conditions 
+      result = case conditions
         when ::Hash
           conditions.map do | key, value |
             case key
@@ -46,7 +46,7 @@ module HashConditions
             iterator condition, options
           end
       end
-  
+
       options[:finalize].call result, options
     end
 
@@ -55,10 +55,10 @@ module HashConditions
     end
 
     def eval_expression value
-      raise "Invalid eval expression" unless value.is_a? Array and value.length == 3 
+      raise "Invalid eval expression" unless value.is_a? Array and value.length == 3
 
       Hash[ [ :key, :operator, :value ].zip( value ) ].tap do | exp |
-        exp[ :operator ] = get_op exp[ :operator ] 
+        exp[ :operator ] = get_op exp[ :operator ]
       end
     end
 
@@ -79,8 +79,8 @@ module HashConditions
 
             result[:operator] = get_op key
             result[:value] = value
-          else 
-            case 
+          else
+            case
               when value.keys.include?('$between')
                 result[:operator] = :between
                 result[:value] = value.values_at [ '$between', '$and' ]
@@ -126,7 +126,7 @@ module HashConditions
         case data
           when /\d{4}-\d{2}-\d{2}[\sT]\d{2}:\d{2}:\d{2}(\.\d{3})?Z?/ then DateTime.parse( data ).to_time
           else data
-        end  
+        end
       else
         data
       end
@@ -143,17 +143,17 @@ module HashConditions
       mod = _ext_get_module key,condition, options
       parser = mod.replacement
 
-      case parser 
+      case parser
         when String then options[:result].call(extract_expression( parser, condition ), options)
         when Hash   then _ext_read_module( { '$eval' => [ parser, op, value ] }, options )
         when Proc   then _ext_read_module( parser.call( key, condition, options ), options )
-      end 
+      end
     end
 
     def _ext_get_module key, condition, options
       modules.select{ |m| m.for_operation? options[:operation] }.find do | matcher |
         matcher.apply_for key, condition
-      end 
+      end
     end
 
     def _ext_read_module parser_output, options
