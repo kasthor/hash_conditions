@@ -1,4 +1,5 @@
-[![Coverage Status](https://coveralls.io/repos/kasthor/hash_conditions/badge.svg)](https://coveralls.io/r/kasthor/hash_conditions)
+[![Code Climate](https://codeclimate.com/github/kasthor/hash_conditions/badges/gpa.svg)](https://codeclimate.com/github/kasthor/hash_conditions)
+[![Test Coverage](https://codeclimate.com/github/kasthor/hash_conditions/badges/coverage.svg)](https://codeclimate.com/github/kasthor/hash_conditions/coverage)
 
 # HashConditions
 
