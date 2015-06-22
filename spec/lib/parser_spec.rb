@@ -31,6 +31,14 @@ describe ".get_conditions" do
     expect(HashConditions::Parser.get_conditions( { condition: { '$eq' => 1 } } )).to eq "condition = 1"
   end
 
+  it "parses a $ne condition" do
+    expect(HashConditions::Parser.get_conditions( { condition: { '$ne' => 1 } } )).to eq "condition != 1"
+  end
+
+  it "parses a $not_equal condition" do
+    expect(HashConditions::Parser.get_conditions( { condition: { '$not_equal' => 1 } } )).to eq "condition != 1"
+  end
+
   it "parses a $equal condition" do
     expect(HashConditions::Parser.get_conditions( { condition: { '$equal' => 1 } } )).to eq "condition = 1"
   end

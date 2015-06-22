@@ -102,7 +102,7 @@ module HashConditions
     def ops
       {
         :==       => [ '$eq', '$equal' ],
-        :!=       => [ '$ne' ],
+        :!=       => [ '$ne', '$not_equal' ],
         :>        => [ '$gt' ],
         :<        => [ '$lt' ],
         :>=       => [ '$gte' ],

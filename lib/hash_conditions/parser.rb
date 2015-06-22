@@ -26,6 +26,8 @@ module HashConditions
       comparisson = case expression[:operator]
         when :==
           "= #{_parse_value expression[:value]}"
+        when :!=
+          "!= #{_parse_value expression[:value]}"
         when :>, :<, :>=, :<=
           "#{ expression[:operator] } #{_parse_value expression[:value]}"
         when :in
