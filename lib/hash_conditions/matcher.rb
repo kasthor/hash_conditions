@@ -58,7 +58,8 @@ module HashConditions
 
           case op.to_s
             when *ARITMETIC_OPERATORS.keys
-              __get_values.call( values ).inject( ARITMETIC_OPERATORS[ op ] )
+              #TODO: Test feature: when applying aritmetics it forces that the values are floats
+              __get_values.call( values ).each{ |v| v.to_f }.inject( ARITMETIC_OPERATORS[ op ] )
             when '$ifNull'
               __get_values.call( values ).drop_while{ |n| n.nil? }.shift
             when '$concat'
