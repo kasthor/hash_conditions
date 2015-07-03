@@ -93,6 +93,14 @@ module HashConditions
         when :contains
           !! %r{#{comparisson_value}}.match( hash_value )
         else
+          #TODO: test this!!
+          comparisson_value = case hash_value
+            when Integer then comparisson_value.to_i
+            when Float then comparisson_value.to_f
+            when String then comparisson_value.to_s
+            else comparisson_value
+          end
+
           hash_value.send( expression[:operator], comparisson_value )
       end
     end

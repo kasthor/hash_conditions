@@ -45,6 +45,8 @@ module HashConditions
           conditions.map do | condition |
             iterator condition, options
           end
+        else
+          raise "Unexpected expression found: #{ conditions }"
       end
 
       options[:finalize].call result, options
