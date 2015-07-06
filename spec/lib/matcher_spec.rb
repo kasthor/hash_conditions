@@ -51,6 +51,17 @@ describe "match" do
       it { scenarios.each &match }
     end
 
+    describe "homogenize the values when <, >, >=, <=" do
+      let( :hash ){{condition: 5}}
+      let( :scenarios ){ [
+        [{ condition: { '$gt' =>  "4" } }, true],
+        [{ condition: { '$lt' =>  "4" } }, false],
+        [{ condition: { '$lte' =>  "5" } }, true],
+        [{ condition: { '$gte' =>  "5" } }, true],
+      ]}
+      it { scenarios.each &match }
+    end
+
     describe "$in" do
       let( :hash ){{ condition: 3 }}
       let( :scenarios ){ [
@@ -164,6 +175,12 @@ describe "match" do
       ).shift).to be_within( 1 ).of( Time.now + 1800 )
     end
 
+    it "calculates the critical points out of a bunch of expressions when compared with a numeric string" do
+      expect( HashConditions::Matcher.critical_times( hash,
+       [ {:key=>{"$substract"=>["$now", :date]}, :operator=>:>, :value=>"3600"} ]
+      ).shift).to be_within( 1 ).of( Time.now + 1800 )
+    end
+
     it "knows when a sub expression uses $now" do
       expect( HashConditions::Matcher.uses_now?({:key=>{"$substract"=>["$now", "date"]}, :operator=>:>, :value=>3600}) ).to be true
     end
@@ -223,5 +240,6 @@ describe "match" do
       query = { { '$substract' => [ '$now', :date ] } => { '$between' => [500, 1000] } }
       expect( HashConditions::Matcher.when( hash, query ) ).to be nil
     end
+
   end
 end

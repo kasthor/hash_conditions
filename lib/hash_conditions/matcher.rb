@@ -1,6 +1,25 @@
 module HashConditions
   class Matcher
     extend Core
+    ARITMETIC_OPERATORS = {
+      '$add' => :+,
+      '$substract' => :-,
+      '$multiply' => :*,
+      '$divide' => :/,
+    }
+
+    def self.fix_for_aritmetics *values
+      class_precedence = [ Float, Integer, String ]
+
+      klass = class_precedence.find{ |k| values.any?{ |v| v.is_a? k } } || NilClass
+
+      values = case klass.name
+        when "Integer" then values.map(&:to_i)
+        when "Float"   then values.map(&:to_f)
+        when "String"  then values.map(&:to_s)
+        else values
+      end
+    end
 
     def self.configurations
       @@configurations ||= {}
@@ -34,13 +53,6 @@ module HashConditions
         when :and then array.all?
       end
     end
-
-    ARITMETIC_OPERATORS = {
-      '$add' => :+,
-      '$substract' => :-,
-      '$multiply' => :*,
-      '$divide' => :/,
-    }
 
     def self.get_key hash, key, options = {}
       __get_values = lambda do | values |
@@ -94,16 +106,11 @@ module HashConditions
         when :contains
           !! %r{#{comparisson_value}}.match( hash_value )
         else
-          #TODO: test this!!
-          comparisson_value = case hash_value
-            when Integer then comparisson_value.to_i
-            when Float then comparisson_value.to_f
-            when String then comparisson_value.to_s
-            else comparisson_value
-          end
-
-          hash_value.send( expression[:operator], comparisson_value )
+          values = fix_for_aritmetics hash_value, comparisson_value
+          values[0].send( expression[:operator], values[1] )
       end
+      rescue
+        raise "The expression: #{ expression } has an error"
     end
 
     def self.when hash, query
@@ -120,16 +127,20 @@ module HashConditions
         map{ | e |
           case e[:operator]
             when :<, :<=, :>, :>= then
-              diff = e[:value] - get_key(hash, e[:key]) + 1
+              diff = get_diff( e[:value], get_key( hash, e[:key] )) + 1
             when :==, :!= then Time.now + s[:diff]
-              diff = e[:value] - get_key(hash, e[:key])
+              diff = get_diff( e[:value], get_key(hash, e[:key]) )
             when :between
-              diff = e[:value][0] - get_key(hash, e[:key])
-              diff = e[:value][1] - get_key(hash, e[:key]) if Time.now + diff < Time.now
+              diff = get_diff( e[:value][0], get_key(hash, e[:key]) )
+              diff = get_diff( e[:value][1], get_key(hash, e[:key]) ) if Time.now + diff < Time.now
           end
 
           Time.now + diff
         }
+    end
+
+    def self.get_diff *values
+      fix_for_aritmetics(*values).inject(&:-)
     end
 
     def self.time_expressions conditions
