@@ -140,26 +140,30 @@ describe "match" do
       end
     end
 
-    describe "get_key" do
+    describe "eval_operand" do
       let( :hash ){{ a: 1, b: 2, null: nil } }
       it "returns a key when key is a string" do
-        expect( HashConditions::Matcher.get_key hash, :a ).to eq 1
+        expect( HashConditions::Matcher.eval_operand hash, :a ).to eq :a
+      end
+
+      it "returns a key when key is a string and is_key is true" do
+        expect( HashConditions::Matcher.eval_operand hash, :a, is_key: true ).to eq 1
       end
 
       it "return a time containing current time when now is specified" do
-        expect( HashConditions::Matcher.get_key(hash, '$now') ).to be_within( 1 ).of( Time.now )
+        expect( HashConditions::Matcher.eval_operand(hash, '$now') ).to be_within( 1 ).of( Time.now )
       end
 
       it "executes an addition when requested" do
-        expect( HashConditions::Matcher.get_key( hash, { "$add" => [ :a, :b ] } )).to eq( 3 )
+        expect( HashConditions::Matcher.eval_operand( hash, { "$add" => [ :a, :b ] }, is_key: true )).to eq( 3 )
       end
 
       it "executes a substraction when requested" do
-        expect( HashConditions::Matcher.get_key( hash, { "$substract" => [ :b, :a ] } )).to eq( 1 )
+        expect( HashConditions::Matcher.eval_operand( hash, { "$substract" => [ :b, :a ] }, is_key: true )).to eq( 1 )
       end
 
       it "executes an $ifNull expression" do
-        expect( HashConditions::Matcher.get_key( hash, {'$ifNull' => [ :null , :a ] } )).to eq( 1 )
+        expect( HashConditions::Matcher.eval_operand( hash, {'$ifNull' => [ :null , :a ] }, is_key: true )).to eq( 1 )
       end
     end
   end
@@ -175,6 +179,12 @@ describe "match" do
       ).shift).to be_within( 1 ).of( Time.now + 1800 )
     end
 
+    it "calculates the critical points out of a bunch of expressions when $now is in the value" do
+      expect( HashConditions::Matcher.critical_times( hash,
+       [ {:key=> :date, :operator=>:between, :value=> [ '$now', { '$add' => [ '$now', 3600 ] } ] } ]
+      ).shift).to be_within( 1 ).of( Time.now + 1800 )
+    end
+
     it "calculates the critical points out of a bunch of expressions when compared with a numeric string" do
       expect( HashConditions::Matcher.critical_times( hash,
        [ {:key=>{"$substract"=>["$now", :date]}, :operator=>:>, :value=>"3600"} ]
@@ -187,6 +197,10 @@ describe "match" do
 
     it "knows when a complex sub expression uses $now" do
       expect( HashConditions::Matcher.uses_now?({:key=>{"$substract"=>[{ "$ifNull" => [ 'null', "$now" ] } , "date"]}, :operator=>:>, :value=>3600}) ).to be true
+    end
+
+    it "knows when a sub expression uses $now in the value" do
+      expect( HashConditions::Matcher.uses_now?({:key=>'test', :operator=>:>, :value=> '$now' }) ).to be true
     end
 
     it "knows when a complex sub expression doesn't use $now" do

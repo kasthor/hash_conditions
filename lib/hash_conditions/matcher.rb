@@ -54,16 +54,17 @@ module HashConditions
       end
     end
 
-    def self.get_key hash, key, options = {}
+    def self.eval_operand hash, key, options = {}
       __get_values = lambda do | values |
-        values.map{ |x| get_key hash, x, options }
+        values.map{ |x| eval_operand hash, x, options }
       end
       case key
         when String, Symbol
           if key.to_s == '$now'
             options[:current_time] || Time.now
           else
-            re_type hash[key]
+            val = options[:is_key] ? hash[key] : key
+            re_type val
           end
         when Hash
           op, values = key.to_a.first
@@ -80,12 +81,14 @@ module HashConditions
               separator = values.shift
               __get_values.call( values ).join( separator )
           end
+        else
+          key
       end
     end
 
     def self.match_single hash, expression, options
-      hash_value = get_key hash, expression[:key], options
-      comparisson_value = expression[ :value ]
+      hash_value = eval_operand hash, expression[:key], options.merge(is_key: true)
+      comparisson_value = eval_operand hash, expression[ :value ], options
 
       case expression[:operator]
         when :==
@@ -127,12 +130,12 @@ module HashConditions
         map{ | e |
           case e[:operator]
             when :<, :<=, :>, :>= then
-              diff = get_diff( e[:value], get_key( hash, e[:key] )) + 1
+              diff = get_diff( eval_operand( hash, e[:value] ), eval_operand( hash, e[:key], is_key: true )) + 1
             when :==, :!= then Time.now + s[:diff]
-              diff = get_diff( e[:value], get_key(hash, e[:key]) )
+              diff = get_diff( eval_operand( hash, e[:value] ), eval_operand(hash, e[:key]) )
             when :between
-              diff = get_diff( e[:value][0], get_key(hash, e[:key]) )
-              diff = get_diff( e[:value][1], get_key(hash, e[:key]) ) if Time.now + diff < Time.now
+              diff = get_diff( eval_operand( hash, e[:value][0] ), eval_operand(hash, e[:key], is_key: true ) )
+              diff = get_diff( eval_operand( hash, e[:value][1] ), eval_operand(hash, e[:key], is_key: true ) ) if Time.now + diff < Time.now
           end
 
           Time.now + diff
@@ -158,16 +161,18 @@ module HashConditions
     end
 
     def self.uses_now? expression
-      key_uses_now? expression[:key]
+      operand_uses_now? expression[:key]  or operand_uses_now? expression[:value]
     end
 
-    def self.key_uses_now? key
+    def self.operand_uses_now? key
       case key
         when String, Symbol
           key.to_s == '$now'
         when Hash
           op, values = key.to_a.first
-          values.map{ |v| key_uses_now? v }.any?
+          values.map{ |v| operand_uses_now? v }.any?
+        else
+          false
       end
     end
   end
