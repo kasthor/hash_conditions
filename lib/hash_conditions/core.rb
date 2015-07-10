@@ -165,8 +165,8 @@ module HashConditions
             when '$concat'
               __get_values.call( values ).join('')
             when '$concatWithSeparator'
-              separator = values.shift
-              __get_values.call( values ).join( separator )
+              separator = values[0]
+              __get_values.call( values[1..-1] ).join( separator )
           end
         else
           key
