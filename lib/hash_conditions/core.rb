@@ -1,6 +1,13 @@
 module HashConditions
   module Core
     # Modular Matchers
+    ARITMETIC_OPERATORS = {
+      '$add' => :+,
+      '$substract' => :-,
+      '$multiply' => :*,
+      '$divide' => :/,
+    }
+
     def modules
       @@modules ||= []
     end
@@ -131,6 +138,38 @@ module HashConditions
         end
       else
         data
+      end
+    end
+
+    def eval_operand hash, key, options = {}
+      __get_values = lambda do | values |
+        values.map{ |x| eval_operand hash, x, options }
+      end
+      case key
+        when String, Symbol
+          if key.to_s == '$now'
+            options[:current_time] || Time.now
+          else
+            val = options[:is_key] ? hash[key] : key
+            re_type val
+          end
+        when Hash
+          op, values = key.to_a.first
+
+          case op.to_s
+            when *ARITMETIC_OPERATORS.keys
+              #TODO: Test feature: when applying aritmetics it forces that the values are floats
+              __get_values.call( values ).each{ |v| v.to_f }.inject( ARITMETIC_OPERATORS[ op ] )
+            when '$ifNull'
+              __get_values.call( values ).drop_while{ |n| n.nil? }.shift
+            when '$concat'
+              __get_values.call( values ).join('')
+            when '$concatWithSeparator'
+              separator = values.shift
+              __get_values.call( values ).join( separator )
+          end
+        else
+          key
       end
     end
 

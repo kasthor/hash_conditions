@@ -35,7 +35,7 @@ module HashConditions
         when :contains
           "LIKE #{ _parse_value(expression[:value], '%', '%') }"
         when :between
-          "BETWEEN #{ _parse_value expression[:value].shift } AND #{ _parse_value expression[:value].shift }"
+          "BETWEEN #{ _parse_value expression[:value][0] } AND #{ _parse_value expression[:value][1] }"
       end
 
       "#{expression[:key]} #{comparisson}"
@@ -46,6 +46,7 @@ module HashConditions
         when String then "'#{prepend}#{value}#{append}'"
         when DateTime, Date, Time then "'#{value.strftime("%Y-%m-%d %H:%M")}'"
         when Integer, Float then "#{value}"
+        when Hash then _parse_value( eval_operand( {}, value ) , prepend, append )
       end
     end
   end

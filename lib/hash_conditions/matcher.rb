@@ -1,12 +1,6 @@
 module HashConditions
   class Matcher
     extend Core
-    ARITMETIC_OPERATORS = {
-      '$add' => :+,
-      '$substract' => :-,
-      '$multiply' => :*,
-      '$divide' => :/,
-    }
 
     def self.fix_for_aritmetics *values
       class_precedence = [ Float, Integer, String ]
@@ -54,38 +48,6 @@ module HashConditions
       end
     end
 
-    def self.eval_operand hash, key, options = {}
-      __get_values = lambda do | values |
-        values.map{ |x| eval_operand hash, x, options }
-      end
-      case key
-        when String, Symbol
-          if key.to_s == '$now'
-            options[:current_time] || Time.now
-          else
-            val = options[:is_key] ? hash[key] : key
-            re_type val
-          end
-        when Hash
-          op, values = key.to_a.first
-
-          case op.to_s
-            when *ARITMETIC_OPERATORS.keys
-              #TODO: Test feature: when applying aritmetics it forces that the values are floats
-              __get_values.call( values ).each{ |v| v.to_f }.inject( ARITMETIC_OPERATORS[ op ] )
-            when '$ifNull'
-              __get_values.call( values ).drop_while{ |n| n.nil? }.shift
-            when '$concat'
-              __get_values.call( values ).join('')
-            when '$concatWithSeparator'
-              separator = values.shift
-              __get_values.call( values ).join( separator )
-          end
-        else
-          key
-      end
-    end
-
     def self.match_single hash, expression, options
       hash_value = eval_operand hash, expression[:key], options.merge(is_key: true)
       comparisson_value = eval_operand hash, expression[ :value ], options
@@ -112,8 +74,8 @@ module HashConditions
           values = fix_for_aritmetics hash_value, comparisson_value
           values[0].send( expression[:operator], values[1] )
       end
-      rescue
-        raise "The expression: #{ expression } has an error"
+      # rescue
+        # raise "The expression: #{ expression } has an error"
     end
 
     def self.when hash, query

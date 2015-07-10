@@ -7,6 +7,10 @@ describe ".get_conditions" do
     expect(HashConditions::Parser.get_conditions({ condition: 1 })).to eq "condition = 1"
   end
 
+  it "evals an expression before creating the request" do
+    expect(HashConditions::Parser.get_conditions({ condition: { '$eq' => { '$add' => [ 2, 2 ] }}})).to eq "condition = 4"
+  end
+
   it "parses an array as an IN" do
     expect(HashConditions::Parser.get_conditions({ condition: [1, 2, 3] })).to eq "condition IN ( 1, 2, 3 )"
   end
