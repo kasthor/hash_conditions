@@ -133,6 +133,8 @@ module HashConditions
         when Hash
           op, values = key.to_a.first
           values.map{ |v| operand_uses_now? v }.any?
+        when Array
+          key.map{ |v| operand_uses_now? v }.any?
         else
           false
       end

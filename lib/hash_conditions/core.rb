@@ -153,6 +153,8 @@ module HashConditions
             val = options[:is_key] ? hash[key] : key
             re_type val
           end
+        when Array
+          __get_values.call( key )
         when Hash
           op, values = key.to_a.first
 
