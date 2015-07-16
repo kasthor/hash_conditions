@@ -49,8 +49,12 @@ module HashConditions
     end
 
     def self.match_single hash, expression, options
+      log "Matching:", expression
       hash_value = eval_operand hash, expression[:key], options.merge(is_key: true)
       comparisson_value = eval_operand hash, expression[ :value ], options
+
+      log "Left:", hash_value
+      log "Right:", comparisson_value
 
       case expression[:operator]
         when :==

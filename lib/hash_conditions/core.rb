@@ -1,6 +1,7 @@
 module HashConditions
   module Core
     # Modular Matchers
+    DEBUG=false
     ARITMETIC_OPERATORS = {
       '$add' => :+,
       '$substract' => :-,
@@ -206,6 +207,10 @@ module HashConditions
         when String then parser_output # this should be removed, since the matcher will not support it
         else raise "return data of type #{ parser_output.class } not supported"
       end
+    end
+
+    def log *args
+      puts *args if(DEBUG)
     end
   end
 end
