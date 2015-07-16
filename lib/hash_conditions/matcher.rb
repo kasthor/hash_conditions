@@ -94,14 +94,15 @@ module HashConditions
     def self.critical_times hash, expressions
       expressions.
         map{ | e |
+          inverter = operand_uses_now?(e[:value])? -1: 1
           case e[:operator]
             when :<, :<=, :>, :>= then
-              diff = get_diff( eval_operand( hash, e[:value] ), eval_operand( hash, e[:key], is_key: true )) + 1
+              diff = inverter * get_diff( eval_operand( hash, e[:value] ), eval_operand( hash, e[:key], is_key: true )) + 1
             when :==, :!= then Time.now + s[:diff]
-              diff = get_diff( eval_operand( hash, e[:value] ), eval_operand(hash, e[:key]) )
+              diff = inverter * get_diff( eval_operand( hash, e[:value] ), eval_operand(hash, e[:key]) )
             when :between
-              diff = get_diff( eval_operand( hash, e[:value][0] ), eval_operand(hash, e[:key], is_key: true ) )
-              diff = get_diff( eval_operand( hash, e[:value][1] ), eval_operand(hash, e[:key], is_key: true ) ) if Time.now + diff < Time.now
+              diff = inverter * get_diff( eval_operand( hash, e[:value][0] ), eval_operand(hash, e[:key], is_key: true ) )
+              diff = inverter * get_diff( eval_operand( hash, e[:value][1] ), eval_operand(hash, e[:key], is_key: true ) ) if Time.now + diff < Time.now
           end
 
           Time.now + diff

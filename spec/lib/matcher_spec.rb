@@ -181,8 +181,15 @@ describe "match" do
 
     it "calculates the critical points out of a bunch of expressions when $now is in the value" do
       expect( HashConditions::Matcher.critical_times( hash,
-       [ {:key=> :date, :operator=>:between, :value=> [ '$now', { '$add' => [ '$now', 3600 ] } ] } ]
+       [ {:key=> :date, :operator=>:between, :value=> [ { '$substract' => [ '$now', 3600 ] }, '$now' ] } ]
       ).shift).to be_within( 1 ).of( Time.now + 1800 )
+    end
+
+    it "calculates the critical points out of a bunch of expressions when $now is in the value" do
+      hash = { date: Time.now }
+      expect( HashConditions::Matcher.critical_times( hash,
+        [{:key=>:date, :operator=>:between, :value=>[{"$substract"=>[{"$substract"=>["$now", 0]}, 600]}, {"$add"=>[{"$substract"=>["$now", 0]}, 60]}]}]
+      ).shift).to be_within( 1 ).of( Time.now + 600 )
     end
 
     it "calculates the critical points out of a bunch of expressions when compared with a numeric string" do
