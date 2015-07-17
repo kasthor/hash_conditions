@@ -44,7 +44,7 @@ module HashConditions
     def self._parse_value value, prepend = '', append = ''
       case value
         when String then "'#{prepend}#{value}#{append}'"
-        when DateTime, Date, Time then "'#{value.strftime("%Y-%m-%d %H:%M")}'"
+        when DateTime, Date, Time then "'#{value.strftime("%Y-%m-%d %H:%M:%S")}'"
         when Integer, Float then "#{value}"
         when Hash then _parse_value( eval_operand( {}, value ) , prepend, append )
       end
