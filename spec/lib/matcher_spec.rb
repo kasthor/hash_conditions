@@ -172,6 +172,9 @@ describe "match" do
     let( :hash ){{ date: Time.now - 1800, permanent_condition: false } }
     let( :query ){{{ '$substract' => [ '$now', :date ] } => { '$gt' => 3600 }}}
 
+    it "knows if an expression is time sensible" do
+      expect( HashConditions::Matcher.time_sensible? query ).to be true
+    end
 
     it "calculates the critical points out of a bunch of expressions" do
       expect( HashConditions::Matcher.critical_times( hash,

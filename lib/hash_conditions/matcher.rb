@@ -127,6 +127,10 @@ module HashConditions
       expressions
     end
 
+    def self.time_sensible? conditions
+      ! time_expressions(conditions).empty?
+    end
+
     def self.uses_now? expression
       operand_uses_now? expression[:key]  or operand_uses_now? expression[:value]
     end
