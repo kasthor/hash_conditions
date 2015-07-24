@@ -230,6 +230,12 @@ describe "match" do
       expect( HashConditions::Matcher.when( hash, query ) ).to be nil
     end
 
+    it "handles a basic query when time has passed, but a fake time is provided" do
+      query = {{ '$substract' => [ '$now', :date ] } => { '$gt' => 900 }}
+      expect( HashConditions::Matcher.when( hash, query, current_time: Time.now - 1800 ) ).to be_within(1).of( Time.now - 900 )
+    end
+
+
     it "solves a query when there are multiple time queries" do
       query = {
         "$and" => [

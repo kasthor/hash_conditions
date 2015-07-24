@@ -83,13 +83,14 @@ module HashConditions
         # raise "The expression: #{ expression } has an error"
     end
 
-    def self.when hash, query
-      now_result = match hash, query
-      test_times = critical_times( hash, time_expressions( query ) )
+    def self.when hash, query, options = {}
+      current_time = options[:current_time] ||= Time.now
+      now_result = match hash, query, options
+      test_times = critical_times( hash, time_expressions( query ), options )
       test_times.
        sort.
-       drop_while{ |t| t < Time.now }.
-       find{ |t| now_result != match( hash, query, current_time: t ) }.
+       drop_while{ |t| t < current_time }.
+       find{ |t| now_result != match( hash, query, options.merge(current_time: t) ) }.
        tap{ |t| log 'Critical Times:', t }
     end
 
