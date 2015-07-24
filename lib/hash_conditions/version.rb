@@ -1,3 +1,3 @@
 module HashConditions
-  VERSION = "1.1.23"
+  VERSION = "1.2.0"
 end
