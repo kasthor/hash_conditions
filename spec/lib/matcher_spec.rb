@@ -123,6 +123,31 @@ describe "match" do
       it { scenarios.each &match }
     end
 
+    describe "compound key" do
+      it "gets the deep values from a hash" do
+        hash = { "level1" => { "level2" => "test" }}
+        condition = { "level1.level2" => { "$eq" => "test" }}
+
+        expect( HashConditions::Matcher.match hash, condition ).to be true
+      end
+    end
+
+    describe "error handling" do
+      let(:hash){ { key: "test" } }
+      let(:condition){ { :not_existing_key => { "$eq" => 111 }} }
+      it "raises an error if a key is not found" do
+        expect{
+          HashConditions::Matcher.match hash, condition
+        }.to raise_error HashConditions::KeyNotFound
+      end
+
+      it "includes the key in the message" do
+        expect{
+          HashConditions::Matcher.match hash, condition
+        }.to raise_error /not_existing_key/
+      end
+    end
+
     describe "force string comparations" do
       it "makes a string match a number for equality" do
         HashConditions::Matcher.configure force_string_comparations: true

@@ -1,4 +1,8 @@
 module HashConditions
+  class KeyNotFound < Exception; end
+  class UnexpectedExpression < Exception; end
+  class InvalidExpression < Exception; end
+
   module Core
     # Modular Matchers
     DEBUG=false
@@ -143,6 +147,19 @@ module HashConditions
       end
     end
 
+    def get_key hash, key
+      if hash.has_key? key
+        hash[ key ]
+      else
+        key_type = key.class
+        key.to_s.split('.').inject(hash) do |ret, k|
+          typed_key = key_type == Symbol ? k.to_sym : k
+          raise KeyNotFound, "key #{key} not found" unless ret.has_key? typed_key
+          ret = ret[ typed_key ]
+        end
+      end
+    end
+
     def eval_operand hash, key, options = {}
       __get_values = lambda do | values |
         values.map{ |x| eval_operand hash, x, options }
@@ -152,7 +169,7 @@ module HashConditions
           if key.to_s == '$now'
             options[:current_time] || Time.now
           else
-            val = options[:is_key] ? hash[key] : key
+            val = options[:is_key] ? get_key( hash, key ) : key
             re_type val
           end
         when Array
