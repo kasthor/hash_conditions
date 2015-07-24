@@ -2,6 +2,7 @@ module HashConditions
   module Core
     # Modular Matchers
     DEBUG=false
+    PRECISION=5
     ARITMETIC_OPERATORS = {
       '$add' => :+,
       '$substract' => :-,
@@ -210,7 +211,7 @@ module HashConditions
     end
 
     def log *args
-      puts *args if(DEBUG)
+      puts args.map(&:to_s).join(" ") if(DEBUG)
     end
   end
 end

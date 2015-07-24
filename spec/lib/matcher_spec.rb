@@ -226,7 +226,7 @@ describe "match" do
     end
 
     it "handles a basic query when time has passed" do
-      query = {{ '$substract' => [ '$now', :date ] } => { '$gt' => 1800 }}
+      query = {{ '$substract' => [ '$now', :date ] } => { '$gt' => 900 }}
       expect( HashConditions::Matcher.when( hash, query ) ).to be nil
     end
 

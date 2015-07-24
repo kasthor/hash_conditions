@@ -9,7 +9,7 @@ module HashConditions
 
       values = case klass.name
         when "Integer" then values.map(&:to_i)
-        when "Float"   then values.map(&:to_f)
+        when "Float"   then values.map(&:to_f).map{|x|x.round(3)}
         when "String"  then values.map(&:to_s)
         else values
       end
@@ -71,7 +71,8 @@ module HashConditions
 
           comparisson_value.include? hash_value
         when :between
-          hash_value > comparisson_value[0] and hash_value < comparisson_value[1]
+          values = fix_for_aritmetics hash_value, *comparisson_value
+          values[0] >= values[1] and values[0] < values[2]
         when :contains
           !! %r{#{comparisson_value}}.match( hash_value )
         else
@@ -88,25 +89,32 @@ module HashConditions
       test_times.
        sort.
        drop_while{ |t| t < Time.now }.
-       find{ |t| now_result != match( hash, query, current_time: t ) }
+       find{ |t| now_result != match( hash, query, current_time: t ) }.
+       tap{ |t| log 'Critical Times:', t }
     end
 
-    def self.critical_times hash, expressions
+    def self.critical_times hash, expressions, options = {}
+      current_time = options[:current_time] ||= Time.now
       expressions.
-        map{ | e |
+        map do | e |
           inverter = operand_uses_now?(e[:value])? -1: 1
           case e[:operator]
             when :<, :<=, :>, :>= then
-              diff = inverter * get_diff( eval_operand( hash, e[:value] ), eval_operand( hash, e[:key], is_key: true )) + 1
-            when :==, :!= then Time.now + s[:diff]
-              diff = inverter * get_diff( eval_operand( hash, e[:value] ), eval_operand(hash, e[:key]) )
+              diff = inverter * get_diff( eval_operand( hash, e[:value], options ),
+                                          eval_operand( hash, e[:key], options.merge(is_key: true) )) + 0.001
+            when :==, :!= then
+              # TODO: test this functionality
+              diff = inverter * get_diff( eval_operand( hash, e[:value], options ),
+                                          eval_operand(hash, e[:key], options.merge(is_key: true) ) )
             when :between
-              diff = inverter * get_diff( eval_operand( hash, e[:value][0] ), eval_operand(hash, e[:key], is_key: true ) )
-              diff = inverter * get_diff( eval_operand( hash, e[:value][1] ), eval_operand(hash, e[:key], is_key: true ) ) if Time.now + diff < Time.now
+              diff = inverter * get_diff( eval_operand( hash, e[:value][0], options ),
+                                          eval_operand(hash, e[:key], options.merge(is_key: true) ) )
+              diff = inverter * get_diff( eval_operand( hash, e[:value][1], options ),
+                                          eval_operand(hash, e[:key], options.merge(is_key: true) ) ) if current_time + diff < current_time
           end
 
-          Time.now + diff
-        }
+          current_time + diff
+        end
     end
 
     def self.get_diff *values
